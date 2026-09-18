@@ -1,32 +1,34 @@
-import { Roboto_Slab, Patua_One } from "next/font/google";
+import { Hind_Siliguri, Inter } from "next/font/google";
 import "./globals.css";
 
-const robotoSlab = Roboto_Slab({
-    subsets: ["latin"],
-    weight: ["400", "700"],
-    variable: "--font-roboto-slab",
+// Bangla font
+const hindSiliguri = Hind_Siliguri({
+    subsets: ["bengali"],
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-hind-siliguri",
     display: "swap",
 });
 
-const patuaOne = Patua_One({
+// Dnglish font
+const inter = Inter({
     subsets: ["latin"],
-    weight: ["400"],
-    variable: "--font-patua",
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-inter",
     display: "swap",
 });
 
 export const metadata = {
     title: "Zara Launch",
-    description: "",
+    description: "Women's Fashion Houaw",
 };
 
 export default function RootLayout({ children }) {
     return (
         <html
-            lang="en"
-            className={`${robotoSlab.variable} ${patuaOne.variable} h-full antialiased`}
+            lang="bn"
+            className={`${hindSiliguri.variable} ${inter.variable} h-full antialiased`}
         >
-            <body className="min-h-full dark:bg-black">
+            <body className="min-h-full dark:bg-black font-sans">
                 {children}
             </body>
         </html>

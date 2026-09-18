@@ -3,19 +3,11 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-body: var(--font-roboto-slab), serif;
-  --font-heading: var(--font-patua), serif;
+  --font-sans: var(--font-hind-siliguri), var(--font-inter), sans-serif;
+
+  --font-english: var(--font-inter), sans-serif;
 }
 
 body {
-  font-family: var(--font-body);
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
+  font-family: var(--font-sans);
 }
