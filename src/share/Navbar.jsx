@@ -3,10 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Menu, X, ChevronDown, User } from "lucide-react";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+
+    const openCart = useCartStore((state) => state.openCart);
+    const totalCartItems = useCartStore((state) => state.getTotalItems)();
 
     return (
         <header className="sticky top-0 z-50 w-full bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E8E1D9] transition-all">
@@ -94,16 +98,19 @@ export default function Navbar() {
 
                     {/* Right: Cart, Account & CTA */}
                     <div className="flex items-center gap-3 sm:gap-5">
-                        <Link
-                            href="/cart"
+                        <button
+                            type="button"
+                            onClick={openCart}
                             className="relative p-2 text-[#2C2724] hover:text-[#9E7B66] transition-colors duration-200"
                             aria-label="Shopping Cart"
                         >
                             <ShoppingBag className="w-5 h-5 stroke-[1.75]" />
-                            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#9E7B66] rounded-full ring-2 ring-[#FAF8F5]">
-                                2
-                            </span>
-                        </Link>
+                            {totalCartItems > 0 && (
+                                <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#9E7B66] rounded-full ring-2 ring-[#FAF8F5]">
+                                    {totalCartItems}
+                                </span>
+                            )}
+                        </button>
 
                         <Link
                             href="/account/login"

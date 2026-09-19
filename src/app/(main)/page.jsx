@@ -1,4 +1,5 @@
 import CategorySection from '@/components/CategorySection'
+import FeaturedProducts from '@/components/FeaturedProducts'
 import HeroBanner from '@/components/HeroBanner'
 import React from 'react'
 
@@ -7,6 +8,7 @@ function Home() {
         <>
             <HeroBanner />
             <CategorySection />
+            <FeaturedProducts />
         </>
     )
 }
