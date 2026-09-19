@@ -1,8 +1,12 @@
+import Navbar from '@/share/Navbar'
 import React from 'react'
 
 function Home() {
     return (
-        <div className="p-4 border rounded-lg">
+        <div className="">
+
+            <Navbar />
+
             {/* English Title (উচ্চারণ বা ব্র্যান্ড নেম) */}
             <h3 className="font-english text-lg font-bold text-gray-900">
                 CeraVe Foaming Facial Cleanser
