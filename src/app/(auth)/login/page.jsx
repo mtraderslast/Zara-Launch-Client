@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react"; import React, { useState, Suspense } from "react"; import Link from "next/link";
+import React, { useState, Suspense } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, X, Send, Crown, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Crown } from "lucide-react";
 import { FaHome } from "react-icons/fa";
 import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,13 +11,11 @@ import Swal from "sweetalert2";
 
 function LoginContent() {
     const [showPassword, setShowPassword] = useState(false);
-    const [isForgotOpen, setIsForgotOpen] = useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
-    const { register: registerForgot, handleSubmit: handleForgotSubmit, formState: { errors: forgotErrors, isSubmitting: isForgotSubmitting }, reset: resetForgotForm } = useForm();
 
     const getRedirectUrl = () => {
         const redirect = searchParams.get("redirect") || searchParams.get("callbackUrl");
@@ -24,7 +23,7 @@ function LoginContent() {
     };
 
     const onLoginSubmit = async (userData) => {
-        const { data, error } = await authClient.signIn.email({
+        const { error } = await authClient.signIn.email({
             email: userData.email,
             password: userData.password,
         });
@@ -42,32 +41,6 @@ function LoginContent() {
         }
     };
 
-    const onForgotSubmit = async (data) => {
-        const { error } = await authClient.requestPasswordReset({
-            email: data.forgotEmail,
-            redirectTo: `${window.location.origin}/reset-password`
-        });
-
-        setIsForgotOpen(false);
-        resetForgotForm();
-
-        if (error) {
-            Swal.fire({
-                icon: "error",
-                title: "অনুরোধ ব্যর্থ হয়েছে",
-                text: error.message || "কোথাও সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
-                confirmButtonColor: "#c59b27",
-            });
-        } else {
-            Swal.fire({
-                icon: "success",
-                title: "লিঙ্ক পাঠানো হয়েছে!",
-                text: `${data.forgotEmail} ইমেইলে পাসওয়ার্ড রিসেট লিঙ্ক পাঠানো হয়েছে।`,
-                confirmButtonColor: "#c59b27",
-            });
-        }
-    };
-
     return (
         <section className="min-h-screen bg-gradient-to-br from-[#FFFDF9] via-[#FAF5EB] to-[#F5ECE0] text-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-[#d4af37] selection:text-white font-sans">
 
@@ -79,7 +52,7 @@ function LoginContent() {
                 href="/"
                 className="absolute top-6 left-6 inline-flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white text-amber-900 border border-amber-200 hover:border-amber-400 rounded-full backdrop-blur-md transition-all text-xs font-semibold tracking-wide shadow-sm hover:shadow group"
             >
-                <FaHomeIcon className="group-hover:-translate-x-0.5 transition-transform text-[#c59b27]" />
+                <FaHome className="group-hover:-translate-x-0.5 transition-transform text-[#c59b27]" />
                 <span>হোমে ফিরে যান</span>
             </Link>
 
@@ -195,13 +168,11 @@ function LoginContent() {
 
 export default function Login() {
     return (
-        <Suspense
-            fallback={
-                <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
-                    <div className="text-[#c59b27] font-semibold text-sm">Henter...</div>
-                </div>
-            }
-        >
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
+                <div className="text-[#c59b27] font-semibold text-sm">লোড হচ্ছে...</div>
+            </div>
+        }>
             <LoginContent />
         </Suspense>
     );
