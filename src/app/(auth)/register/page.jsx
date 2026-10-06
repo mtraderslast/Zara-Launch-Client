@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Crown } from "lucide-react";
@@ -9,7 +9,7 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
-function Register() {
+function RegisterContent() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -55,7 +55,6 @@ function Register() {
     return (
         <section className="min-h-screen bg-gradient-to-br from-[#FFFDF9] via-[#FAF5EB] to-[#F5ECE0] text-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-[#d4af37] selection:text-white font-sans">
 
-            {/* Background Soft Golden Glow Effects */}
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#f3e5ab]/30 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#d4af37]/15 rounded-full blur-[120px] pointer-events-none" />
 
@@ -82,7 +81,7 @@ function Register() {
                     </h2>
 
                     <p className="text-xs font-normal text-slate-500 leading-relaxed max-w-xs mx-auto">
-                        <span className="bg-gradient-to-r from-[#c59b27] to-[#8c6b12] bg-clip-text text-transparent font-semibold">Zara Launch</span>-এ যুক্ত হয়ে আমাদের প্রিমিয়াম কালেকশন এক্সপ্লোর করুন।
+                        <span className="bg-gradient-to-r from-[#c59b27] to-[#8c6b12] bg-clip-text text-transparent font-semibold">Zara Launch</span>-এ যুক্ত হয়ে আমাদের প্রিমিয়াম কালেকশন এক্সপ্লোর করুন।
                     </p>
                 </div>
 
@@ -246,4 +245,10 @@ function Register() {
     );
 }
 
-export default Register;
+export default function Register() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <RegisterContent />
+        </Suspense>
+    );
+}
