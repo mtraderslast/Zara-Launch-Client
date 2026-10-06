@@ -9,8 +9,9 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
 
-function Login() {
+function LoginContent() {
     const [showPassword, setShowPassword] = useState(false);
+    const [isForgotOpen, setIsForgotOpen] = useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -55,7 +56,7 @@ function Login() {
             Swal.fire({
                 icon: "error",
                 title: "অনুরোধ ব্যর্থ হয়েছে",
-                text: error.message || "কোথাও সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+                text: error.message || "কোথাও সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
                 confirmButtonColor: "#c59b27",
             });
         } else {
@@ -71,7 +72,6 @@ function Login() {
     return (
         <section className="min-h-screen bg-gradient-to-br from-[#FFFDF9] via-[#FAF5EB] to-[#F5ECE0] text-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-[#d4af37] selection:text-white font-sans">
 
-            {/* Background Soft Golden Glow Effects */}
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#f3e5ab]/30 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#d4af37]/15 rounded-full blur-[120px] pointer-events-none" />
 
@@ -80,7 +80,7 @@ function Login() {
                 href="/"
                 className="absolute top-6 left-6 inline-flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white text-amber-900 border border-amber-200 hover:border-amber-400 rounded-full backdrop-blur-md transition-all text-xs font-semibold tracking-wide shadow-sm hover:shadow group"
             >
-                <FaHome className="group-hover:-translate-x-0.5 transition-transform text-[#c59b27]" />
+                <FaHomeIcon className="group-hover:-translate-x-0.5 transition-transform text-[#c59b27]" />
                 <span>হোমে ফিরে যান</span>
             </Link>
 
@@ -194,4 +194,14 @@ function Login() {
     );
 }
 
-export default Login;
+export default function Login() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
+                <div className="text-[#c59b27] font-semibold text-sm">Henter...</div>
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
+    );
+}
