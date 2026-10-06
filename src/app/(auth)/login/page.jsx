@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useState } from "react"; import React, { useState, Suspense } from "react"; import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, X, Send, Crown, Sparkles } from "lucide-react";
 import { FaHome } from "react-icons/fa";
@@ -196,11 +195,13 @@ function LoginContent() {
 
 export default function Login() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
-                <div className="text-[#c59b27] font-semibold text-sm">Henter...</div>
-            </div>
-        }>
+        <Suspense
+            fallback={
+                <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
+                    <div className="text-[#c59b27] font-semibold text-sm">Henter...</div>
+                </div>
+            }
+        >
             <LoginContent />
         </Suspense>
     );

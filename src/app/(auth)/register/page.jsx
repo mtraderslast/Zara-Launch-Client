@@ -247,7 +247,13 @@ function RegisterContent() {
 
 export default function Register() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+        <Suspense
+            fallback={
+                <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
+                    <div className="text-[#c59b27] font-semibold text-sm">লোড হচ্ছে...</div>
+                </div>
+            }
+        >
             <RegisterContent />
         </Suspense>
     );
