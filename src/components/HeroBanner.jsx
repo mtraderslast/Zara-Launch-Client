@@ -5,9 +5,9 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const slides = [
-    { id: 1, src: "/hero-banner-1.png", alt: "Zara Launch Banner 1" },
-    { id: 2, src: "/hero-banner-2.png", alt: "Zara Launch Banner 2" },
-    { id: 3, src: "/hero-banner-3.png", alt: "Zara Launch Banner 3" },
+    { id: 1, src: "/hero-section-banner-1.png", alt: "Zara Launch Banner 1" },
+    { id: 2, src: "/hero-section-banner-2.png", alt: "Zara Launch Banner 2" },
+    { id: 3, src: "/hero-section-banner-3.png", alt: "Zara Launch Banner 3" },
 ];
 
 export default function HeroBanner() {
@@ -37,7 +37,8 @@ export default function HeroBanner() {
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
-            <div className="relative w-full h-[220px] sm:h-[300px] md:h-[450px] lg:h-[550px] xl:h-[620px] 2xl:h-[700px] overflow-hidden">
+            {/* ব্যানারের অনুপাত ২:১ ও ১৬:৯, তাই বক্স ১৯:১০ রাখা হয়েছে; উচ্চতা ৭২০px ও স্ক্রিনের (নেভবার বাদে) বেশি হবে না */}
+            <div className="relative w-full aspect-[19/10] max-h-[min(720px,calc(100vh-5rem))] overflow-hidden">
                 {slides.map((slide, index) => {
                     const isActive = index === currentSlide;
                     return (
@@ -46,13 +47,22 @@ export default function HeroBanner() {
                             className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                                 }`}
                         >
+                            {/* চওড়া স্ক্রিনে পাশের ফাঁকা জায়গা ভরাতে একই ছবির ঝাপসা কপি */}
+                            <Image
+                                src={slide.src}
+                                alt=""
+                                aria-hidden="true"
+                                fill
+                                sizes="100vw"
+                                className="object-cover object-center scale-110 blur-2xl opacity-60"
+                            />
                             <Image
                                 src={slide.src}
                                 alt={slide.alt}
                                 fill
                                 priority={index === 0}
                                 sizes="100vw"
-                                className="w-full h-full object-contain md:object-cover lg:object-fill object-center"
+                                className="object-contain object-center"
                             />
                         </div>
                     );
