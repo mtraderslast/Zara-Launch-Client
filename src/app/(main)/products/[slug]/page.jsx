@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, use } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -28,6 +28,15 @@ import Swal from "sweetalert2";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { fetchProductReviews, createReview, updateReview, deleteReview } from "@/lib/action/review";
 import { fetchProductDetails } from "@/lib/action/products";
+import { getCategoryLabel, getSubCategoryLabel } from "@/lib/categories";
+import { CONTACT } from "@/lib/contact";
+import {
+    getUnitPricing,
+    findMatchingVariant,
+    getAttributeOptions,
+    selectAttribute,
+} from "@/lib/pricing";
+import { IoLogoWhatsapp } from "react-icons/io";
 
 const extractReviews = (res) => {
     const candidates = [
@@ -83,6 +92,10 @@ export default function ProductDetailPage({ params }) {
     const [submittingReview, setSubmittingReview] = useState(false);
 
     const addToCart = useCartStore((state) => state.addToCart);
+    const [justAdded, setJustAdded] = useState(false);
+    const justAddedTimer = useRef(null);
+
+    useEffect(() => () => clearTimeout(justAddedTimer.current), []);
 
     const loadReviews = useCallback(async (productId) => {
         if (!productId) return;
@@ -132,40 +145,24 @@ export default function ProductDetailPage({ params }) {
         };
     }, [currentSlug, loadReviews]);
 
-    const attributeOptions = useMemo(() => {
-        if (!product?.hasVariants || !product?.variants) return {};
-        const options = {};
-        product.variants.forEach((variant) => {
-            if (variant.attributes) {
-                Object.entries(variant.attributes).forEach(([key, val]) => {
-                    if (!options[key]) options[key] = new Set();
-                    options[key].add(val);
-                });
-            }
-        });
-        const formatted = {};
-        Object.keys(options).forEach((key) => {
-            formatted[key] = Array.from(options[key]);
-        });
-        return formatted;
-    }, [product]);
+    const attributeOptions = useMemo(() => getAttributeOptions(product), [product]);
 
-    const activeVariant = useMemo(() => {
-        if (!product?.hasVariants || !product?.variants?.length) return null;
-        return (
-            product.variants.find((v) =>
-                Object.entries(selectedAttributes).every(
-                    ([key, val]) => v.attributes?.[key] === val
-                )
-            ) || product.variants[0]
-        );
-    }, [product, selectedAttributes]);
+    // নির্বাচিত অ্যাট্রিবিউটের সাথে হুবহু মেলে এমন ভ্যারিয়েন্ট
+    const activeVariant = useMemo(
+        () => findMatchingVariant(product, selectedAttributes),
+        [product, selectedAttributes]
+    );
 
-    const basePrice = activeVariant?.price ?? product?.price ?? 0;
-    const discountRate = product?.discountRate ?? 0;
-    const discountedPrice = Math.round(basePrice - (basePrice * discountRate) / 100);
-    const savedAmount = basePrice - discountedPrice;
-    const currentStock = activeVariant ? activeVariant.stock ?? 0 : product?.stock ?? 10;
+    const { basePrice, finalPrice: discountedPrice, hasDiscount, savedAmount } = getUnitPricing(
+        product,
+        activeVariant
+    );
+    const needsVariantSelection = Boolean(product?.hasVariants && product?.variants?.length > 0);
+    const currentStock = needsVariantSelection
+        ? activeVariant
+            ? activeVariant.stock ?? 0
+            : 0
+        : product?.stock ?? 10;
     const isOutOfStock = currentStock <= 0;
 
     useEffect(() => {
@@ -193,7 +190,7 @@ export default function ProductDetailPage({ params }) {
 
     const handleMouseLeave = () => setZoom({ active: false, origin: "50% 50%" });
 
-    const handleAddToCart = (showSuccessAlert = true) => {
+    const handleAddToCart = (showFeedback = true) => {
         if (isOutOfStock || !product) {
             Swal.fire({
                 icon: "error",
@@ -204,23 +201,12 @@ export default function ProductDetailPage({ params }) {
             return false;
         }
 
-        addToCart(product.slug, quantity, selectedAttributes, activeVariant?.sku || null);
+        addToCart(product.slug, quantity, activeVariant?.attributes || selectedAttributes, activeVariant?.sku || null);
 
-        if (showSuccessAlert) {
-            Swal.fire({
-                icon: "success",
-                title: "কার্টে যোগ করা হয়েছে!",
-                text: `"${product.titleBn}" সফলভাবে কার্টে যুক্ত হয়েছে।`,
-                showCancelButton: true,
-                confirmButtonColor: "#2C2724",
-                cancelButtonColor: "#9E7B66",
-                confirmButtonText: "চেকআউটে যান",
-                cancelButtonText: "আরও কেনাকাটা করুন",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    router.push("/checkout");
-                }
-            });
+        if (showFeedback) {
+            setJustAdded(true);
+            clearTimeout(justAddedTimer.current);
+            justAddedTimer.current = setTimeout(() => setJustAdded(false), 2000);
         }
         return true;
     };
@@ -379,7 +365,7 @@ export default function ProductDetailPage({ params }) {
         }
     };
 
-    const shopPhoneNumber = "01939074820";
+    const shopPhoneNumber = CONTACT.phoneE164;
     const variantInfoText = Object.entries(selectedAttributes)
         .map(([k, v]) => `${k}: ${v}`)
         .join(", ");
@@ -389,7 +375,7 @@ export default function ProductDetailPage({ params }) {
         `পরিমাণ: ${quantity} টি\n` +
         `মূল্য: ৳${(discountedPrice * quantity).toLocaleString("bn-BD")}`
     );
-    const whatsappUrl = `https://wa.me/8801891547609?text=${whatsappText}`;
+    const whatsappUrl = `${CONTACT.whatsapp}?text=${whatsappText}`;
 
     if (loading) {
         return (
@@ -469,9 +455,9 @@ export default function ProductDetailPage({ params }) {
                                 </div>
                             )}
 
-                            {discountRate > 0 && (
+                            {hasDiscount && (
                                 <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-xs font-bold bg-[#A8483B] text-white">
-                                    -{discountRate}%
+                                    ৳{savedAmount.toLocaleString("bn-BD")} ছাড়
                                 </span>
                             )}
                         </div>
@@ -499,19 +485,14 @@ export default function ProductDetailPage({ params }) {
                                 <span className="text-3xl sm:text-4xl font-bold text-[#2C2724]">
                                     ৳{discountedPrice.toLocaleString("bn-BD")}
                                 </span>
-                                {discountRate > 0 && (
-                                    <>
-                                        <span className="text-base text-[#A89F91] line-through">
-                                            ৳{basePrice.toLocaleString("bn-BD")}
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#A8483B] text-white">
-                                            {discountRate.toLocaleString("bn-BD")}% ছাড়
-                                        </span>
-                                    </>
+                                {hasDiscount && (
+                                    <span className="text-base text-[#A89F91] line-through">
+                                        ৳{basePrice.toLocaleString("bn-BD")}
+                                    </span>
                                 )}
                             </div>
-                            {discountRate > 0 && (
-                                <p className="text-xs text-emerald-700 font-medium mt-1">
+                            {hasDiscount && (
+                                <p className="text-xs text-emerald-700 font-medium mt-1 font-mono">
                                     আপনি সাশ্রয় করছেন ৳{savedAmount.toLocaleString("bn-BD")}
                                 </p>
                             )}
@@ -540,7 +521,9 @@ export default function ProductDetailPage({ params }) {
                                                             key={val}
                                                             type="button"
                                                             onClick={() =>
-                                                                setSelectedAttributes((prev) => ({ ...prev, [key]: val }))
+                                                                setSelectedAttributes((prev) =>
+                                                                    selectAttribute(product, prev, key, val)
+                                                                )
                                                             }
                                                             className={`min-w-[48px] px-4 py-2 text-sm font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 ${isSelected
                                                                 ? "bg-[#2C2724] text-[#FAF8F5] border-[#2C2724]"
@@ -610,8 +593,17 @@ export default function ProductDetailPage({ params }) {
                                 onClick={() => handleAddToCart(true)}
                                 className="flex-1 h-12 px-6 rounded-xl bg-white text-[#2C2724] border-2 border-[#2C2724] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#FAF8F5] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.99]"
                             >
-                                <ShoppingBag className="w-4 h-4 text-[#9E7B66]" />
-                                <span>কার্টে যোগ করুন</span>
+                                {justAdded ? (
+                                    <>
+                                        <Check className="w-4 h-4 text-[#9E7B66]" />
+                                        <span>কার্টে যোগ হয়েছে</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingBag className="w-4 h-4 text-[#9E7B66]" />
+                                        <span>কার্টে যোগ করুন</span>
+                                    </>
+                                )}
                             </button>
                         </div>
 
@@ -631,7 +623,7 @@ export default function ProductDetailPage({ params }) {
                                 rel="noopener noreferrer"
                                 className="h-11 px-4 rounded-xl border border-[#25D366]/40 bg-[#F2FAF4] hover:bg-[#E3F7E8] text-[#1E7E34] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors shadow-2xs"
                             >
-                                <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                                <IoLogoWhatsapp className="w-5 h-5 text-[#25D366]" />
                                 <span>হোয়াটসঅ্যাপে অর্ডার</span>
                             </a>
                         </div>
@@ -656,8 +648,8 @@ export default function ProductDetailPage({ params }) {
                         <div className="border border-[#E8E1D9] rounded-xl overflow-hidden text-sm divide-y divide-[#E8E1D9]">
                             {[
                                 { label: "ব্র্যান্ড", value: product.brand },
-                                { label: "ক্যাটাগরি", value: product.category },
-                                { label: "সাব-ক্যাটাগরি", value: product.subCategory },
+                                { label: "ক্যাটাগরি", value: product.category && getCategoryLabel(product.category) },
+                                { label: "সাব-ক্যাটাগরি", value: product.subCategory && getSubCategoryLabel(product.subCategory) },
                                 { label: "SKU", value: activeVariant?.sku, mono: true },
                             ]
                                 .filter((row) => row.value)

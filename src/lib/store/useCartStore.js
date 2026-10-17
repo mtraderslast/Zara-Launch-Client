@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+// অ্যাট্রিবিউটের ক্রম যাই হোক, একই ভ্যারিয়েন্টের জন্য একই ID তৈরি হবে
+const buildCartItemId = (slug, selectedAttributes = {}) => {
+    const sorted = Object.keys(selectedAttributes)
+        .sort()
+        .reduce((acc, key) => ({ ...acc, [key]: selectedAttributes[key] }), {});
+    return `${slug}-${JSON.stringify(sorted)}`;
+};
+
 export const useCartStore = create(
     persist(
         (set, get) => ({
@@ -9,8 +17,8 @@ export const useCartStore = create(
             openCart: () => set({ isOpen: true }),
             closeCart: () => set({ isOpen: false }),
 
-            addToCart: (slug, quantity = 1, selectedAttributes = {}) => {
-                const cartItemId = `${slug}-${JSON.stringify(selectedAttributes)}`;
+            addToCart: (slug, quantity = 1, selectedAttributes = {}, variantSku = null) => {
+                const cartItemId = buildCartItemId(slug, selectedAttributes);
                 set((state) => {
                     const existingItem = state.items.find((i) => i.cartItemId === cartItemId);
                     if (existingItem) {
@@ -23,7 +31,10 @@ export const useCartStore = create(
                         };
                     }
                     return {
-                        items: [...state.items, { cartItemId, slug, quantity, selectedAttributes }],
+                        items: [
+                            ...state.items,
+                            { cartItemId, slug, quantity, selectedAttributes, variantSku },
+                        ],
                     };
                 });
             },

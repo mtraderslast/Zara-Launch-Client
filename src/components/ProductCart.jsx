@@ -7,8 +7,12 @@ import Swal from "sweetalert2";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { toggleFavorite, checkIsFavorite } from "@/lib/action/favorite"; // checkIsFavorite ইমপোর্ট করা হয়েছে
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { getUnitPricing } from "@/lib/pricing";
+import { getSubCategoryLabel } from "@/lib/categories";
 
 function ProductCart({ product, wishlist = [] }) {
+    const router = useRouter();
     const { data: session } = authClient.useSession();
     const user = session?.user;
 
@@ -47,16 +51,18 @@ function ProductCart({ product, wishlist = [] }) {
         };
     }, [user, product?._id]);
 
-    const discountRate = product?.discountRate || 0;
-    const hasDiscount = discountRate > 0;
-
-    const calculatedDiscountedPrice = hasDiscount
-        ? Math.round(product.price - (product.price * discountRate) / 100)
-        : product.price;
+    const { finalPrice: calculatedDiscountedPrice, hasDiscount, savedAmount } = getUnitPricing(product);
 
     const handleAddToCart = (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // ভ্যারিয়েন্ট (সাইজ/রঙ) আছে এমন পণ্যে আগে ভ্যারিয়েন্ট বেছে নিতে হবে
+        if (product.hasVariants && product.variants?.length > 0) {
+            router.push(`/products/${product.slug}`);
+            return;
+        }
+
         addToCart(product.slug, 1, {});
     };
 
@@ -131,12 +137,12 @@ function ProductCart({ product, wishlist = [] }) {
                 <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1.5 items-start">
                     {hasDiscount && (
                         <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold tracking-wider bg-[#2C2724] text-[#E0C9A6] shadow-xs">
-                            {discountRate}% ছাড়
+                            ৳{savedAmount.toLocaleString("bn-BD")} ছাড়
                         </span>
                     )}
                     {product.subCategory && (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide bg-[#FAF8F5]/90 backdrop-blur-xs text-[#5C534D] border border-[#E8E1D9]">
-                            {product.subCategory}
+                            {getSubCategoryLabel(product.subCategory)}
                         </span>
                     )}
                 </div>

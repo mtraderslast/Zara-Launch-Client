@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ShoppingBag, Menu, X, ChevronDown, User, LayoutDashboard, LogOut } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { authClient } from "@/lib/auth-client";
+import { categoryConfig, productsHref } from "@/lib/categories";
 
 export default function Navbar() {
     const router = useRouter();
@@ -16,7 +17,8 @@ export default function Navbar() {
     const { data: session, isPending } = authClient.useSession();
     const user = session?.user;
     const isAdmin = user?.role === "admin";
-    const dashboardHref = `/dashboard/${user?.role}`;
+    // ড্যাশবোর্ড শুধু অ্যাডমিনের জন্য (সাধারণ ইউজারের কোনো ড্যাশবোর্ড নেই)
+    const dashboardHref = "/dashboard/admin";
 
     const openCart = useCartStore((state) => state.openCart);
     const items = useCartStore((state) => state.items);
@@ -75,16 +77,30 @@ export default function Navbar() {
                                 <ChevronDown className="w-4 h-4 text-[#8C7A6B] transition-transform duration-300 group-hover:rotate-180 group-hover/btn:text-[#9E7B66]" />
                             </Link>
 
-                            <div className="absolute top-[calc(100%-8px)] left-1/2 -translate-x-1/2 w-60 bg-[#FCFBF9] border border-[#E8E1D9] shadow-xl rounded-2xl p-2 opacity-0 invisible translate-y-3 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
-                                <div className="flex flex-col space-y-1">
-                                    <Link href="/products?category=Clothing" className="group/item p-2.5 rounded-xl hover:bg-[#F4ECE4] transition-all duration-200">
-                                        <p className="text-sm font-medium text-[#2C2724] group-hover/item:translate-x-1 group-hover/item:text-[#9E7B66] transition-all">বোরকা ও আবায়া</p>
-                                        <p className="text-[10px] tracking-wider uppercase text-[#8C7A6B] mt-0.5">Burka & Abaya</p>
-                                    </Link>
-                                    <Link href="/products?category=Fragrance" className="group/item p-2.5 rounded-xl hover:bg-[#F4ECE4] transition-all duration-200">
-                                        <p className="text-sm font-medium text-[#2C2724] group-hover/item:translate-x-1 group-hover/item:text-[#9E7B66] transition-all">পারফিউম ও বডি স্প্রে</p>
-                                        <p className="text-[10px] tracking-wider uppercase text-[#8C7A6B] mt-0.5">Perfume & Body Spray</p>
-                                    </Link>
+                            <div className="absolute top-[calc(100%-8px)] left-1/2 -translate-x-1/2 w-[720px] max-w-[90vw] bg-[#FCFBF9] border border-[#E8E1D9] shadow-xl rounded-2xl p-5 opacity-0 invisible translate-y-3 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
+                                <div className="grid grid-cols-4 gap-x-5 gap-y-5">
+                                    {categoryConfig.map((cat) => (
+                                        <div key={cat.value}>
+                                            <Link href={productsHref(cat.value)} className="group/item block pb-1.5 mb-1.5 border-b border-[#E8E1D9]">
+                                                <p className="text-sm font-semibold text-[#2C2724] group-hover/item:text-[#9E7B66] transition-colors">{cat.labelBn}</p>
+                                                <p className="text-[10px] tracking-wider uppercase text-[#8C7A6B] mt-0.5">{cat.labelEn}</p>
+                                            </Link>
+                                            <ul className="space-y-1">
+                                                {cat.subCategories.map((sub) => (
+                                                    <li key={sub.value}>
+                                                        <Link href={productsHref(cat.value, sub.value)} className="block text-xs text-[#5C534D] hover:text-[#9E7B66] hover:translate-x-1 transition-all">
+                                                            {sub.labelBn}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ))}
+                                    <div className="flex items-end">
+                                        <Link href="/products" className="text-xs font-semibold text-[#9E7B66] hover:underline">
+                                            সব পণ্য দেখুন →
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -175,9 +191,21 @@ export default function Navbar() {
                                 </button>
                             </div>
                             {mobileProductsOpen && (
-                                <div className="ml-4 pl-3 border-l-2 border-[#E8E1D9] my-1 space-y-2 py-1">
-                                    <Link href="/products?category=Clothing" onClick={() => setMobileMenuOpen(false)} className="block text-xs font-medium text-[#2C2724] hover:text-[#9E7B66]">বোরকা ও আবায়া (Burka & Abaya)</Link>
-                                    <Link href="/products?category=Fragrance" onClick={() => setMobileMenuOpen(false)} className="block text-xs font-medium text-[#2C2724] hover:text-[#9E7B66]">পারফিউম ও বডি স্প্রে (Perfume & Body Spray)</Link>
+                                <div className="ml-4 pl-3 border-l-2 border-[#E8E1D9] my-1 space-y-3 py-1">
+                                    {categoryConfig.map((cat) => (
+                                        <div key={cat.value}>
+                                            <Link href={productsHref(cat.value)} onClick={() => setMobileMenuOpen(false)} className="block text-xs font-semibold text-[#2C2724] hover:text-[#9E7B66]">
+                                                {cat.labelBn} ({cat.labelEn})
+                                            </Link>
+                                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                                {cat.subCategories.map((sub) => (
+                                                    <Link key={sub.value} href={productsHref(cat.value, sub.value)} onClick={() => setMobileMenuOpen(false)} className="text-[11px] text-[#70645C] hover:text-[#9E7B66]">
+                                                        {sub.labelBn}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>

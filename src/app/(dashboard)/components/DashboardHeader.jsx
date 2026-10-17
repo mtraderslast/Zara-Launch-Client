@@ -85,12 +85,12 @@ function DashboardHeader({ onMenuClick }) {
                             <div className="p-2">
 
                                 <Link
-                                    href={`/my-profile`}
+                                    href="/"
                                     onClick={() => setAvatarMenuOpen(false)}
                                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-amber-50 hover:text-[#c59b27]"
                                 >
                                     <UserIcon size={15} />
-                                    প্রোফাইল
+                                    ওয়েবসাইট দেখুন
                                 </Link>
 
                                 <button

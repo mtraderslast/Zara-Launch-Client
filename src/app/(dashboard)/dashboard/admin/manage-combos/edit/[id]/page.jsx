@@ -84,7 +84,7 @@ export default function EditComboPage() {
                         title: "প্যাকেজ পাওয়া যায়নি",
                         text: "এই কম্বো প্যাকেজের কোনো তথ্য পাওয়া যায়নি।",
                         confirmButtonColor: "#2C2724",
-                    }).then(() => router.push("/admin/combos"));
+                    }).then(() => router.push("/dashboard/admin/manage-combos"));
                 }
             } catch (error) {
                 Swal.fire({
@@ -603,7 +603,7 @@ export default function EditComboPage() {
                     {/* সাবমিট বাটন */}
                     <div className="flex justify-end items-center gap-4 pt-4">
                         <Link
-                            href="/admin/combos"
+                            href="/dashboard/admin/manage-combos"
                             className="px-6 py-3.5 border border-[#E8E1D9] bg-white text-[#70645C] hover:text-[#2C2724] text-xs font-semibold uppercase tracking-widest rounded-lg transition-all"
                         >
                             বাতিল করুন

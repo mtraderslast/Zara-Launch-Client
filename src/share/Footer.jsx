@@ -1,6 +1,7 @@
 import { MailBadge, MapPinCheck, PhoneCall, Send } from "lucide-react";
 import Link from "next/link";
-import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaTiktok, FaWhatsapp } from "react-icons/fa";
+import { CONTACT } from "@/lib/contact";
 
 
 export default function Footer() {
@@ -31,23 +32,27 @@ export default function Footer() {
                         </p>
 
                         <div className="space-y-2.5 pt-1">
-                            <div className="flex items-center gap-3 text-sm text-[#4A423D]">
-                                <MapPinCheck className="w-4 h-4 text-[#9E7B66] shrink-0" />
-                                <span>বনানী, ঢাকা-১২১৩, বাংলাদেশ</span>
+                            <div className="flex items-start gap-3 text-sm text-[#4A423D]">
+                                <MapPinCheck className="w-4 h-4 text-[#9E7B66] shrink-0 mt-0.5" />
+                                <span>{CONTACT.address}</span>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-[#4A423D]">
+                            <a href={`tel:${CONTACT.phoneE164}`} className="flex items-center gap-3 text-sm text-[#4A423D] hover:text-[#9E7B66] transition-colors">
                                 <PhoneCall className="w-4 h-4 text-[#9E7B66] shrink-0" />
-                                <span dir="ltr">+৮৮০ ১৭০০-০০০০০০</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-[#4A423D]">
+                                <span dir="ltr">{CONTACT.phoneDisplay}</span>
+                            </a>
+                            <a href={CONTACT.whatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm text-[#4A423D] hover:text-[#9E7B66] transition-colors">
+                                <FaWhatsapp className="w-4 h-4 text-[#9E7B66] shrink-0" />
+                                <span dir="ltr">{CONTACT.phoneDisplay}</span>
+                            </a>
+                            <a href={`mailto:${CONTACT.email}`} className="flex items-center gap-3 text-sm text-[#4A423D] hover:text-[#9E7B66] transition-colors">
                                 <MailBadge className="w-4 h-4 text-[#9E7B66] shrink-0" />
-                                <span>support@zaralaunch.com</span>
-                            </div>
+                                <span>{CONTACT.email}</span>
+                            </a>
                         </div>
                     </div>
 
                     {/* Column 2: Quick Links */}
-                    <div className="lg:col-span-2 space-y-4">
+                    <div className="lg:col-span-3 lg:col-start-6 space-y-4">
                         <h3 className="text-sm font-semibold text-[#2C2724] uppercase tracking-wider relative inline-block after:content-[''] after:block after:w-7 after:h-[2px] after:bg-[#9E7B66] after:mt-1.5">
                             কুইক লিংকস
                         </h3>
@@ -58,8 +63,8 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/about" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
-                                    আমাদের কথা
+                                <Link href="/combo" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
+                                    কম্বো প্যাকেজ
                                 </Link>
                             </li>
                             <li>
@@ -68,37 +73,8 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/blog" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
-                                    ব্লগ
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Column 3: Customer Care */}
-                    <div className="lg:col-span-2 space-y-4">
-                        <h3 className="text-sm font-semibold text-[#2C2724] uppercase tracking-wider relative inline-block after:content-[''] after:block after:w-7 after:h-[2px] after:bg-[#9E7B66] after:mt-1.5">
-                            কাস্টমার কেয়ার
-                        </h3>
-                        <ul className="space-y-2.5 text-sm text-[#5C534D]">
-                            <li>
-                                <Link href="/privacy-policy" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
-                                    প্রাইভেসি পলিসি
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/refund-policy" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
-                                    রিফান্ড পলিসি
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/delivery-info" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
-                                    ডেলিভারি চার্জ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/terms" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
-                                    শর্তাবলী
+                                <Link href="/track" className="hover:text-[#9E7B66] hover:translate-x-1 inline-block transition-all duration-200">
+                                    অর্ডার ট্র্যাক করুন
                                 </Link>
                             </li>
                         </ul>
@@ -137,7 +113,7 @@ export default function Footer() {
                             </span>
                             <div className="flex items-center gap-2.5">
                                 <a
-                                    href="https://facebook.com"
+                                    href={CONTACT.facebook}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="w-8 h-8 rounded-full bg-[#EDE6DC] hover:bg-[#9E7B66] flex items-center justify-center text-[#2C2724] hover:text-white transition-colors duration-200"
@@ -146,25 +122,16 @@ export default function Footer() {
                                     <FaFacebook className="w-4 h-4" />
                                 </a>
                                 <a
-                                    href="https://instagram.com"
+                                    href={CONTACT.whatsapp}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="w-8 h-8 rounded-full bg-[#EDE6DC] hover:bg-[#9E7B66] flex items-center justify-center text-[#2C2724] hover:text-white transition-colors duration-200"
-                                    aria-label="Instagram"
+                                    aria-label="WhatsApp"
                                 >
-                                    <FaInstagram className="w-4 h-4" />
+                                    <FaWhatsapp className="w-4 h-4" />
                                 </a>
                                 <a
-                                    href="https://youtube.com"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="w-8 h-8 rounded-full bg-[#EDE6DC] hover:bg-[#9E7B66] flex items-center justify-center text-[#2C2724] hover:text-white transition-colors duration-200"
-                                    aria-label="YouTube"
-                                >
-                                    <FaYoutube className="w-4 h-4" />
-                                </a>
-                                <a
-                                    href="https://tiktok.com"
+                                    href={CONTACT.tiktok}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="w-8 h-8 rounded-full bg-[#EDE6DC] hover:bg-[#9E7B66] flex items-center justify-center text-[#2C2724] hover:text-white transition-colors duration-200"
@@ -185,28 +152,6 @@ export default function Footer() {
                     <p className="text-xs text-[#6E635B] tracking-wide text-center md:text-left">
                         © 2026 Zara Launch. All Rights Reserved.
                     </p>
-
-                    {/* Payment Badges */}
-                    <div className="flex items-center flex-wrap justify-center gap-2">
-                        <span className="text-[11px] uppercase tracking-wider text-[#8C7A6B] mr-1 font-medium">
-                            পেমেন্ট পার্টনার:
-                        </span>
-                        <span className="px-2.5 py-1 text-[11px] font-medium tracking-wide bg-[#FFFFFF] border border-[#DDD3C7] rounded text-[#4A423D] shadow-xs">
-                            bKash
-                        </span>
-                        <span className="px-2.5 py-1 text-[11px] font-medium tracking-wide bg-[#FFFFFF] border border-[#DDD3C7] rounded text-[#4A423D] shadow-xs">
-                            Nagad
-                        </span>
-                        <span className="px-2.5 py-1 text-[11px] font-medium tracking-wide bg-[#FFFFFF] border border-[#DDD3C7] rounded text-[#4A423D] shadow-xs">
-                            Rocket
-                        </span>
-                        <span className="px-2.5 py-1 text-[11px] font-medium tracking-wide bg-[#FFFFFF] border border-[#DDD3C7] rounded text-[#4A423D] shadow-xs">
-                            Visa
-                        </span>
-                        <span className="px-2.5 py-1 text-[11px] font-medium tracking-wide bg-[#FFFFFF] border border-[#DDD3C7] rounded text-[#4A423D] shadow-xs">
-                            Mastercard
-                        </span>
-                    </div>
                 </div>
             </div>
         </footer>

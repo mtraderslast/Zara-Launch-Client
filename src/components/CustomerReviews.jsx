@@ -1,94 +1,71 @@
 "use client";
 
-import { useState } from "react";
-import { Star, CheckCircle2, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Star, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { fetchHomeTopReviews } from "@/lib/action/review";
 
-const reviews = [
-    {
-        id: 1,
-        name: "নুসরাত জাহান",
-        location: "ধানমন্ডি, ঢাকা",
-        date: "১২ সেপ্টেম্বর, ২০২৬",
-        rating: 5,
-        verified: true,
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        productImage: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=300&auto=format&fit=crop&q=80",
-        productName: "দুবাই চেরি সফট সিল্ক আবায়া",
-        review:
-            "কাপড়ের মান সত্যিই অসাধারণ! একদম ছবির মতোই সুন্দর ফিনিশিং এবং সিলুয়েট। বিশেষ করে সেলাইয়ের সূক্ষ্ম কাজটা আমার খুব মনে ধরেছে। ডেলিভারিও পেয়েছি মাত্র ২ দিনে।",
-    },
-    {
-        id: 2,
-        name: "ফারহানা রহমান",
-        location: "নাসিরাবাদ, চট্টগ্রাম",
-        date: "০৫ সেপ্টেম্বর, ২০২৬",
-        rating: 5,
-        verified: true,
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-        productImage: null,
-        productName: "রয়্যাল কাফতান পার্টি আবায়া",
-        review:
-            "আগে অনলাইন থেকে বোরকা নিতে ভয় পেতাম সাইজ আর ফেব্রিক নিয়ে। কিন্তু জারা লঞ্চ থেকে নিয়ে পুরোপুরি সন্তুষ্ট। প্রিমিয়াম প্যাকিং এবং সাথে ম্যাচিং পারফিউম স্যাম্পল উপহার ছিল চমৎকার সারপ্রাইজ!",
-    },
-    {
-        id: 3,
-        name: "তানজিলা আক্তার",
-        location: "উত্তরা, ঢাকা",
-        date: "২৮ আগস্ট, ২০২৬",
-        rating: 5,
-        verified: true,
-        avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-        productImage: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&auto=format&fit=crop&q=80",
-        productName: "রোজ ভেলভেট বডি স্প্রে ও উদ",
-        review:
-            "বডি স্প্রেটার সুবাস দীর্ঘস্থায়ী এবং মিষ্টি একটি আভা ছড়ায়। অ্যালকোহল মুক্ত হওয়ায় স্বাচ্ছন্দ্যে পরা যায়। দ্বিতীয়বারের মতো অর্ডার করলাম।",
-    },
-    {
-        id: 4,
-        name: "মেহরিন শায়লা",
-        location: "উপশহর, সিলেট",
-        date: "২০ আগস্ট, ২০২৬",
-        rating: 5,
-        verified: true,
-        avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80",
-        productImage: null,
-        productName: "কোরিয়ান নিদাহ এ-লাইন বোরকা",
-        review:
-            "গরমের দিনে পরার জন্য এর চেয়ে আরামদায়ক ফেব্রিক আর হয় না। হালকা ও ব্রিদেবল। কাস্টমার কেয়ারের ব্যবহারও অনেক অমায়িক ছিল।",
-    },
-    {
-        id: 5,
-        name: "আফসানা হক",
-        location: "সোনাডাঙ্গা, খুলনা",
-        date: "১০ আগস্ট, ২০২৬",
-        rating: 5,
-        verified: true,
-        avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=150&auto=format&fit=crop&q=80",
-        productImage: "https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?w=300&auto=format&fit=crop&q=80",
-        productName: "পার্ল ওয়ার্ক পার্টি হিজাব সেট",
-        review:
-            "পার্লের কাজগুলো খুব মজবুতভাবে বসানো। ওয়াশ করার পরও ফেব্রিক নষ্ট হয়নি। মার্জিত ও রাজকীয় লুক এনে দেয় এক নিমিষেই।",
-    },
-    {
-        id: 6,
-        name: "সাদিয়া ইসলাম",
-        location: "রাজপাড়া, রাজশাহী",
-        date: "০২ আগস্ট, ২০২৬",
-        rating: 5,
-        verified: true,
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
-        productImage: null,
-        productName: "মডার্ন ফ্রন্ট জিপার বোরকা",
-        review:
-            "অফিস এবং নিয়মিত যাতায়াতের জন্য খুবই ব্যবহারবান্ধব। সাইজিং চার্ট একদম একুরেট ছিল। সবার প্রশংসা পেয়েছি এটি পরে।",
-    },
-];
+// এর কম রিভিউ থাকলে মার্কি (চলমান স্লাইড) না দেখিয়ে স্থির গ্রিডে দেখানো হয়
+const MIN_REVIEWS_FOR_MARQUEE = 3;
+
+const formatDate = (value) => {
+    if (!value) return "";
+    return new Date(value).toLocaleDateString("bn-BD", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    });
+};
+
+const normalizeReview = (review) => {
+    const product = review.productId && typeof review.productId === "object" ? review.productId : null;
+    return {
+        id: review._id,
+        name: review.userName || "গ্রাহক",
+        avatar: review.userImage || "",
+        date: formatDate(review.createdAt),
+        rating: Math.max(0, Math.min(5, Math.round(Number(review.rating) || 0))),
+        review: review.comment,
+        productName: product?.titleBn || product?.titleEn || "",
+        productImage: product?.images?.[0] || null,
+        productSlug: product?.slug || null,
+    };
+};
 
 export default function CustomerReviews() {
     const [isPaused, setIsPaused] = useState(false);
+    const [reviews, setReviews] = useState([]);
+    const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 });
+    const [loading, setLoading] = useState(true);
 
-    const marqueeReviews = [...reviews, ...reviews];
+    useEffect(() => {
+        let cancelled = false;
+        fetchHomeTopReviews()
+            .then((res) => {
+                if (cancelled) return;
+                setReviews((res?.data || []).map(normalizeReview));
+                setStats({
+                    averageRating: res?.meta?.averageRating || 0,
+                    totalReviews: res?.meta?.totalReviews || 0,
+                });
+            })
+            .catch(() => {
+                if (!cancelled) setReviews([]);
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    if (!loading && reviews.length === 0) return null;
+
+    const useMarquee = reviews.length >= MIN_REVIEWS_FOR_MARQUEE;
+    const displayReviews = useMarquee ? [...reviews, ...reviews] : reviews;
+    const averageStars = Math.round(stats.averageRating);
 
     return (
         <section className="w-full px-2 sm:px-3 md:px-4 py-14 lg:py-20 bg-[#FAF8F5] overflow-hidden border-t border-[#E8E1D9]">
@@ -115,16 +92,16 @@ export default function CustomerReviews() {
                         <div className="flex flex-col">
                             <div className="flex items-center gap-1.5">
                                 <span className="font-serif text-2xl font-bold text-[#2C2724] leading-none">
-                                    ৪.৯
+                                    {stats.averageRating.toLocaleString("bn-BD", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                                 </span>
                                 <div className="flex items-center text-[#E0C9A6]">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-3.5 h-3.5 fill-[#E0C9A6]" />
+                                        <Star key={i} className={`w-3.5 h-3.5 ${i < averageStars ? "fill-[#E0C9A6]" : ""}`} />
                                     ))}
                                 </div>
                             </div>
                             <span className="text-[11px] text-[#8C7A6B] mt-1">
-                                ১,২০০+ ভেরিফায়েড রিভিউ
+                                {stats.totalReviews.toLocaleString("bn-BD")}টি গ্রাহক রিভিউ
                             </span>
                         </div>
                     </div>
@@ -141,32 +118,38 @@ export default function CustomerReviews() {
                 </div>
             </div>
 
-            {/* Marquee Carousel Container */}
+            {loading ? (
+                <div className="flex gap-4 sm:gap-6 overflow-hidden">
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="w-[300px] sm:w-[360px] h-[220px] shrink-0 rounded-2xl bg-[#EFE8DF] animate-pulse" />
+                    ))}
+                </div>
+            ) : (
             <div
                 className="relative w-full overflow-hidden"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >
-                {/* Soft edge fade masks */}
-                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 z-10 bg-gradient-to-r from-[#FAF8F5] to-transparent" />
-                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 z-10 bg-gradient-to-l from-[#FAF8F5] to-transparent" />
+                {useMarquee && (
+                    <>
+                        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 z-10 bg-gradient-to-r from-[#FAF8F5] to-transparent" />
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 z-10 bg-gradient-to-l from-[#FAF8F5] to-transparent" />
+                    </>
+                )}
 
-                {/* Framer Motion Infinite Track */}
                 <motion.div
-                    className="flex gap-4 sm:gap-6 w-max cursor-grab active:cursor-grabbing"
-                    animate={{
-                        x: isPaused ? undefined : ["0%", "-50%"],
-                    }}
+                    className={useMarquee ? "flex gap-4 sm:gap-6 w-max" : "flex flex-wrap justify-center gap-4 sm:gap-6"}
+                    animate={useMarquee ? { x: isPaused ? undefined : ["0%", "-50%"] } : undefined}
                     transition={{
                         x: {
                             repeat: Infinity,
                             repeatType: "loop",
-                            duration: 38,
+                            duration: Math.max(20, reviews.length * 6),
                             ease: "linear",
                         },
                     }}
                 >
-                    {marqueeReviews.map((item, index) => (
+                    {displayReviews.map((item, index) => (
                         <div
                             key={`${item.id}-${index}`}
                             className="w-[300px] sm:w-[360px] flex flex-col justify-between p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E1D9] shadow-2xs hover:shadow-md hover:border-[#D4BA91] transition-all duration-300 select-none"
@@ -174,26 +157,23 @@ export default function CustomerReviews() {
                             <div>
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-[#EFE8DF] shrink-0 border border-[#E8E1D9]">
-                                            <img
-                                                src={item.avatar}
-                                                alt={item.name}
-                                                className="w-full h-full object-cover"
-                                            />
+                                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-[#EFE8DF] shrink-0 border border-[#E8E1D9] flex items-center justify-center">
+                                            {item.avatar ? (
+                                                <img
+                                                    src={item.avatar}
+                                                    alt={item.name}
+                                                    referrerPolicy="no-referrer"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-sm font-bold text-[#9E7B66]">
+                                                    {item.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div>
-                                            <div className="flex items-center gap-1.5">
-                                                <h3 className="text-sm font-bold text-[#2C2724]">
-                                                    {item.name}
-                                                </h3>
-                                                {item.verified && (
-                                                    <CheckCircle2 className="w-3.5 h-3.5 text-[#9E7B66]" />
-                                                )}
-                                            </div>
-                                            <p className="text-[11px] text-[#8C7A6B]">
-                                                {item.location}
-                                            </p>
-                                        </div>
+                                        <h3 className="text-sm font-bold text-[#2C2724]">
+                                            {item.name}
+                                        </h3>
                                     </div>
 
                                     <span className="text-[10px] text-[#A89F91] whitespace-nowrap">
@@ -213,7 +193,10 @@ export default function CustomerReviews() {
                             </div>
 
                             <div className="mt-4 pt-3.5 border-t border-[#F2ECE4] flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 overflow-hidden">
+                                <Link
+                                    href={item.productSlug ? `/products/${item.productSlug}` : "/products"}
+                                    className="flex items-center gap-2 overflow-hidden hover:opacity-80 transition-opacity"
+                                >
                                     {item.productImage && (
                                         <div className="relative w-7 h-9 rounded bg-[#FAF8F5] overflow-hidden shrink-0 border border-[#E8E1D9]">
                                             <img
@@ -226,16 +209,17 @@ export default function CustomerReviews() {
                                     <span className="text-[11px] font-medium text-[#7C6E65] truncate">
                                         {item.productName}
                                     </span>
-                                </div>
+                                </Link>
 
                                 <span className="text-[10px] font-medium text-[#9E7B66] bg-[#F4ECE4] px-2 py-0.5 rounded-full shrink-0">
-                                    ভেরিফায়েড ক্রেতা
+                                    গ্রাহক রিভিউ
                                 </span>
                             </div>
                         </div>
                     ))}
                 </motion.div>
             </div>
+            )}
         </section>
     );
 }

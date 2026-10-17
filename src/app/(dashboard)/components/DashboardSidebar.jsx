@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ChevronRight, X, UserPen, ShoppingBag, PlusCircle, PackageCheck, FolderPlus, Layers } from "lucide-react";
+import { LayoutDashboard, ChevronRight, X, ShoppingBag, PlusCircle, PackageCheck, FolderPlus, Layers } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { TiShoppingCart } from "react-icons/ti";
-import { FaHeart } from "react-icons/fa";
 
 const MENU_CONFIG = {
     admin: [
@@ -16,13 +14,6 @@ const MENU_CONFIG = {
         { name: "কম্বো অর্ডার", href: "/dashboard/admin/combo-orders", icon: ShoppingBag },
         { name: "এড কম্বো", href: "/dashboard/admin/add-combo", icon: FolderPlus },
         { name: "মেনেজ কম্বো", href: "/dashboard/admin/manage-combos", icon: Layers },
-    ],
-
-    user: [
-        { name: "ডেশবোর্ড", href: "/dashboard/user", icon: LayoutDashboard },
-        { name: "মাই অর্ডার", href: "/dashboard/user/my-orders", icon: TiShoppingCart },
-        { name: "ফেভারিট", href: "/dashboard/user/my-favorites", icon: FaHeart },
-        { name: "প্রোফাইল", href: "/my-profile", icon: UserPen },
     ],
 };
 
@@ -41,9 +32,10 @@ function DashboardSidebar({ isOpen, closeSidebar }) {
         );
     }
 
-    if (!user || !role) return null;
+    // ড্যাশবোর্ড শুধু অ্যাডমিনের জন্য
+    if (!user || role !== "admin") return null;
 
-    const menuItems = MENU_CONFIG[role] || [];
+    const menuItems = MENU_CONFIG.admin;
 
     return (
         <aside

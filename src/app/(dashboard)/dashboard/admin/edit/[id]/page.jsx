@@ -7,26 +7,7 @@ import { Plus, Trash2, X, ImagePlus, Tag, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import { fetchProductById, updateProduct } from "@/lib/action/products";
-
-const categoryConfig = [
-    {
-        labelBn: "পোশাক (Clothing)",
-        value: "Clothing",
-        subCategories: [
-            { labelBn: "বোরকা (Burqa)", value: "Burqa" },
-            { labelBn: "হিজাব (Hijab)", value: "Hijab" },
-            { labelBn: "আবায়া (Abaya)", value: "Abaya" },
-        ],
-    },
-    {
-        labelBn: "সুগন্ধি (Fragrance)",
-        value: "Fragrance",
-        subCategories: [
-            { labelBn: "বডি স্প্রে (Body Spray)", value: "Body Spray" },
-            { labelBn: "পারফিউম (Perfume)", value: "Perfume" },
-        ],
-    },
-];
+import { categoryConfig, getBrandSuggestions } from "@/lib/categories";
 
 function VariantAttributesField({ nestIndex, control, register }) {
     const { fields, append, remove } = useFieldArray({
@@ -43,6 +24,10 @@ function VariantAttributesField({ nestIndex, control, register }) {
                     </span>
                     <p className="text-[11px] text-[#8C7A6B]">
                         যেমন: সাইজ, রঙ, ভলিউম (Volume), ওজন (Weight) ইত্যাদি
+                    </p>
+                    <p className="text-[11px] text-[#9E7B66] mt-0.5">
+                        একাধিক মান দিতে কমা (,) দিয়ে লিখুন — যেমন Size = 42, 46, 52 দিলে সেভ করার সময়
+                        প্রতিটি সাইজের জন্য আলাদা ভ্যারিয়েন্ট তৈরি হবে।
                     </p>
                 </div>
                 <button
@@ -104,6 +89,7 @@ export default function EditProductPage() {
         handleSubmit,
         watch,
         setValue,
+        getValues,
         reset,
         formState: { errors, isSubmitting },
     } = useForm({
@@ -116,7 +102,7 @@ export default function EditProductPage() {
             subCategory: "",
             brand: "",
             price: "",
-            discountRate: 0,
+            discountPrice: "",
             images: [],
             isFeatured: false,
             status: "active",
@@ -156,6 +142,7 @@ export default function EditProductPage() {
                         return {
                             sku: v.sku || "",
                             price: v.price ?? "",
+                            discountPrice: v.discountPrice ?? "",
                             stock: v.stock ?? 0,
                             attributeList: attributeList.length > 0 ? attributeList : [{ key: "", value: "" }],
                         };
@@ -170,7 +157,7 @@ export default function EditProductPage() {
                         subCategory: prod.subCategory || "",
                         brand: prod.brand || "",
                         price: prod.price ?? "",
-                        discountRate: prod.discountRate ?? 0,
+                        discountPrice: prod.discountPrice ?? "",
                         images: prod.images || [],
                         isFeatured: Boolean(prod.isFeatured),
                         status: prod.status || "active",
@@ -184,7 +171,7 @@ export default function EditProductPage() {
                         title: "পণ্য পাওয়া যায়নি",
                         text: "এই পণ্যটির তথ্য পাওয়া যায়নি।",
                         confirmButtonColor: "#2C2724",
-                    }).then(() => router.push("/admin/products"));
+                    }).then(() => router.push("/dashboard/admin/manage-products"));
                 }
             } catch (error) {
                 Swal.fire({
@@ -207,6 +194,9 @@ export default function EditProductPage() {
         const found = categoryConfig.find((c) => c.value === selectedCategory);
         return found ? found.subCategories : [];
     }, [selectedCategory]);
+
+    const selectedSubCategory = watch("subCategory");
+    const brandSuggestions = getBrandSuggestions(selectedCategory, selectedSubCategory);
 
     const handleCategoryChange = (e) => {
         setValue("category", e.target.value, { shouldValidate: true });
@@ -254,7 +244,7 @@ export default function EditProductPage() {
             descriptionBn: data.descriptionBn.trim(),
             category: data.category.trim(),
             price: Number(data.price),
-            discountRate: Number(data.discountRate) || 0,
+            discountPrice: data.discountPrice !== "" && data.discountPrice != null ? Number(data.discountPrice) : null,
             images: data.images,
             isFeatured: Boolean(data.isFeatured),
             status: data.status || "active",
@@ -263,7 +253,7 @@ export default function EditProductPage() {
             variants: [],
         };
 
-        if (data.subCategory?.trim()) payload.subCategory = data.subCategory.trim();
+        payload.subCategory = data.subCategory?.trim() || "";
         if (data.brand?.trim()) payload.brand = data.brand.trim();
 
         if (payload.hasVariants && Array.isArray(data.variants) && data.variants.length > 0) {
@@ -283,6 +273,9 @@ export default function EditProductPage() {
                 if (v.sku?.trim()) variant.sku = v.sku.trim();
                 if (v.price !== "" && v.price !== null && v.price !== undefined) {
                     variant.price = Number(v.price);
+                }
+                if (v.discountPrice !== "" && v.discountPrice !== null && v.discountPrice !== undefined) {
+                    variant.discountPrice = Number(v.discountPrice);
                 }
 
                 return variant;
@@ -455,7 +448,7 @@ export default function EditProductPage() {
                                     <option value="">-- ক্যাটাগরি বেছে নিন --</option>
                                     {categoryConfig.map((cat) => (
                                         <option key={cat.value} value={cat.value}>
-                                            {cat.labelBn}
+                                            {cat.labelBn} ({cat.labelEn})
                                         </option>
                                     ))}
                                 </select>
@@ -473,7 +466,7 @@ export default function EditProductPage() {
                                     <option value="">-- সাব-ক্যাটাগরি বেছে নিন --</option>
                                     {availableSubCategories.map((sub) => (
                                         <option key={sub.value} value={sub.value}>
-                                            {sub.labelBn}
+                                            {sub.labelBn} ({sub.labelEn})
                                         </option>
                                     ))}
                                 </select>
@@ -486,8 +479,14 @@ export default function EditProductPage() {
                                 <input
                                     type="text"
                                     {...register("brand")}
+                                    list="brand-suggestions"
                                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E1D9] rounded-lg text-sm text-[#2C2724] focus:outline-none focus:border-[#9E7B66]"
                                 />
+                                <datalist id="brand-suggestions">
+                                    {brandSuggestions.map((b) => (
+                                        <option key={b} value={b} />
+                                    ))}
+                                </datalist>
                             </div>
                         </div>
                     </section>
@@ -500,7 +499,7 @@ export default function EditProductPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#70645C] mb-2">
-                                    মূল্য (টাকা) *
+                                    মূল দাম (টাকা) *
                                 </label>
                                 <input
                                     type="number"
@@ -512,16 +511,31 @@ export default function EditProductPage() {
 
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#70645C] mb-2">
-                                    ডিসকাউন্ট (%)
+                                    ডিসকাউন্ট দাম (টাকা - ঐচ্ছিক)
                                 </label>
                                 <input
                                     type="number"
-                                    step="1"
+                                    step="0.01"
                                     min="0"
-                                    max="100"
-                                    {...register("discountRate")}
+                                    placeholder="খালি রাখলে কোনো ডিসকাউন্ট থাকবে না"
+                                    {...register("discountPrice", {
+                                        min: { value: 0, message: "ডিসকাউন্ট দাম ঋণাত্মক হতে পারবে না" },
+                                        validate: (value) => {
+                                            if (value === "" || value === null || value === undefined) return true;
+                                            if (Number(value) === 0) return true;
+                                            return (
+                                                Number(value) < Number(getValues("price")) ||
+                                                "ডিসকাউন্ট দাম অবশ্যই মূল দামের চেয়ে কম হতে হবে"
+                                            );
+                                        },
+                                    })}
                                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E1D9] rounded-lg text-sm text-[#2C2724] focus:outline-none focus:border-[#9E7B66]"
                                 />
+                                {errors.discountPrice && (
+                                    <span className="text-xs text-[#A8483B] mt-1.5 block">
+                                        {errors.discountPrice.message}
+                                    </span>
+                                )}
                             </div>
 
                             <div>
@@ -700,7 +714,7 @@ export default function EditProductPage() {
                                             </button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                             <div>
                                                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#70645C] mb-1.5">
                                                     এসকেইউ (SKU)
@@ -714,13 +728,27 @@ export default function EditProductPage() {
 
                                             <div>
                                                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#70645C] mb-1.5">
-                                                    ভ্যারিয়েন্টের মূল্য
+                                                    ভ্যারিয়েন্টের মূল দাম
                                                 </label>
                                                 <input
                                                     type="number"
                                                     step="0.01"
+                                                    placeholder="খালি রাখলে পণ্যের মূল দাম"
                                                     {...register(`variants.${index}.price`)}
-                                                    className="w-full px-3 py-2.5 bg-[#FFFFFF] border border-[#E8E1D9] rounded-md text-xs text-[#2C2724] focus:outline-none focus:border-[#9E7B66]"
+                                                    className="w-full px-3 py-2.5 bg-[#FFFFFF] border border-[#E8E1D9] rounded-md text-xs text-[#2C2724] placeholder-[#8C7A6B]/50 focus:outline-none focus:border-[#9E7B66]"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#70645C] mb-1.5">
+                                                    ভ্যারিয়েন্টের ডিসকাউন্ট দাম
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="খালি রাখলে ডিসকাউন্ট নেই"
+                                                    {...register(`variants.${index}.discountPrice`)}
+                                                    className="w-full px-3 py-2.5 bg-[#FFFFFF] border border-[#E8E1D9] rounded-md text-xs text-[#2C2724] placeholder-[#8C7A6B]/50 focus:outline-none focus:border-[#9E7B66]"
                                                 />
                                             </div>
 
@@ -751,6 +779,7 @@ export default function EditProductPage() {
                                         append({
                                             sku: "",
                                             price: "",
+                                            discountPrice: "",
                                             stock: 0,
                                             attributeList: [{ key: "", value: "" }],
                                         })
@@ -766,7 +795,7 @@ export default function EditProductPage() {
                     {/* সাবমিট বাটন */}
                     <div className="flex justify-end items-center gap-4 pt-4">
                         <Link
-                            href="/admin/products"
+                            href="/dashboard/admin/manage-products"
                             className="px-6 py-3.5 border border-[#E8E1D9] bg-white text-[#70645C] hover:text-[#2C2724] text-xs font-semibold uppercase tracking-widest rounded-lg transition-all"
                         >
                             বাতিল করুন

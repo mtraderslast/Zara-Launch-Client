@@ -60,11 +60,6 @@ export default function HomeComboSection() {
 
     if (!combo) return null;
 
-    const discountRate =
-        combo.originalPrice > combo.comboPrice
-            ? Math.round(((combo.originalPrice - combo.comboPrice) / combo.originalPrice) * 100)
-            : 0;
-
     const savedAmount = Math.max(0, combo.originalPrice - combo.comboPrice);
     const allGalleryImages = [combo.bannerImage, ...(combo.images || [])].filter(Boolean);
 
@@ -111,9 +106,9 @@ export default function HomeComboSection() {
                                     এক্সক্লুসিভ কম্বো
                                 </span>
 
-                                {discountRate > 0 && (
+                                {savedAmount > 0 && (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-[#2C2724] text-[#E0C9A6]">
-                                        {discountRate}% নিশ্চিত সাশ্রয়
+                                        ৳{savedAmount.toLocaleString("bn-BD")} নিশ্চিত সাশ্রয়
                                     </span>
                                 )}
 

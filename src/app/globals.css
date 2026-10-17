@@ -3,7 +3,7 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-hind-siliguri), var(--font-inter), sans-serif;
+  --font-sans: var(--font-bn-digits), var(--font-hind-siliguri), var(--font-inter), sans-serif;
 
   --font-english: var(--font-inter), sans-serif;
 }

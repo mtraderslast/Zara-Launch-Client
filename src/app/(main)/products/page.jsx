@@ -10,35 +10,22 @@ import {
     Check,
     Search,
     Loader2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import ProductCart from "@/components/ProductCart";
 import { fetchAllProducts } from "@/lib/action/products";
+import { categoryConfig } from "@/lib/categories";
 
-const categoryConfig = [
-    {
-        labelBn: "পোশাক (Clothing)",
-        value: "Clothing",
-        subCategories: [
-            { labelBn: "বোরকা (Burqa)", value: "Burqa" },
-            { labelBn: "হিজাব (Hijab)", value: "Hijab" },
-            { labelBn: "আবায়া (Abaya)", value: "Abaya" },
-        ],
-    },
-    {
-        labelBn: "সুগন্ধি (Fragrance)",
-        value: "Fragrance",
-        subCategories: [
-            { labelBn: "বডি স্প্রে (Body Spray)", value: "Body Spray" },
-            { labelBn: "পারফিউম (Perfume)", value: "Perfume" },
-        ],
-    },
-];
+const PRODUCTS_PER_PAGE = 12;
+const MAX_PRICE_LIMIT = 50000;
 
 function ShopContent() {
     const searchParams = useSearchParams();
 
     const [products, setProducts] = useState([]);
     const [totalProducts, setTotalProducts] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
 
     const [searchInput, setSearchInput] = useState("");
@@ -62,22 +49,33 @@ function ShopContent() {
     }, [searchParams]);
 
     const availableSubCategories = useMemo(() => {
-        if (selectedCategory === "ALL") {
-            return categoryConfig.flatMap((cat) => cat.subCategories);
-        }
         const activeCat = categoryConfig.find((cat) => cat.value === selectedCategory);
         return activeCat ? activeCat.subCategories : [];
     }, [selectedCategory]);
+
+    // ফিল্টার/সার্চ/সর্ট বদলালে পেজ নিজে থেকেই ১ এ ফিরে যায় (আলাদা effect বা ডাবল ফেচ ছাড়াই)
+    const filtersKey = [selectedCategory, selectedSubCategory, appliedMaxPrice, sortBy, activeSearch].join("|");
+    const [pageState, setPageState] = useState({ key: "", page: 1 });
+    const currentPage = pageState.key === filtersKey ? pageState.page : 1;
+
+    const goToPage = (page) => {
+        setPageState({ key: filtersKey, page });
+        if (typeof window !== "undefined") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    };
 
     const loadProducts = useCallback(async () => {
         try {
             setLoading(true);
             const params = {
-                limit: 12,
+                page: currentPage,
+                limit: PRODUCTS_PER_PAGE,
                 sortBy,
-                maxPrice: appliedMaxPrice,
             };
 
+            // স্লাইডার সর্বোচ্চে থাকলে কোনো দামের সীমা নেই (নইলে ৫০,০০০ টাকার বেশি দামের পণ্য লুকিয়ে যেত)
+            if (appliedMaxPrice < MAX_PRICE_LIMIT) params.maxPrice = appliedMaxPrice;
             if (selectedCategory !== "ALL") params.category = selectedCategory;
             if (selectedSubCategory !== "ALL") params.subCategory = selectedSubCategory;
             if (activeSearch.trim()) params.search = activeSearch.trim();
@@ -86,14 +84,29 @@ function ShopContent() {
 
             setProducts(response?.data || []);
             setTotalProducts(response?.meta?.total || 0);
+            setTotalPages(response?.meta?.totalPages || 1);
         } catch (error) {
             console.error("Failed to fetch products:", error);
             setProducts([]);
             setTotalProducts(0);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
-    }, [selectedCategory, selectedSubCategory, appliedMaxPrice, sortBy, activeSearch]);
+    }, [currentPage, selectedCategory, selectedSubCategory, appliedMaxPrice, sortBy, activeSearch]);
+
+    // পেজিনেশন বাটনে দেখানোর পেজ নম্বর (বর্তমান পেজের আশপাশে, বাকিগুলো "…")
+    const pageNumbers = useMemo(() => {
+        const pages = [];
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
+                pages.push(p);
+            } else if (pages[pages.length - 1] !== "...") {
+                pages.push("...");
+            }
+        }
+        return pages;
+    }, [totalPages, currentPage]);
 
     useEffect(() => {
         loadProducts();
@@ -168,6 +181,7 @@ function ShopContent() {
                 </div>
             </div>
 
+            {availableSubCategories.length > 0 && (
             <div className="space-y-2 pt-4 border-t border-[#E8E1D9]">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2724]">
                     সাব-ক্যাটাগরি
@@ -203,6 +217,7 @@ function ShopContent() {
                     })}
                 </div>
             </div>
+            )}
 
             <div className="space-y-3 pt-4 border-t border-[#E8E1D9]">
                 <div className="flex items-center justify-between">
@@ -360,6 +375,54 @@ function ShopContent() {
                                 />
                             ))}
                         </div>
+                    )}
+
+                    {!loading && totalPages > 1 && (
+                        <nav
+                            aria-label="Pagination"
+                            className="mt-6 flex flex-wrap items-center justify-center gap-1.5"
+                        >
+                            <button
+                                type="button"
+                                onClick={() => goToPage(currentPage - 1)}
+                                disabled={currentPage <= 1}
+                                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold border border-[#E8E1D9] bg-white text-[#2C2724] hover:bg-[#F3ECE4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                <span>আগের</span>
+                            </button>
+
+                            {pageNumbers.map((page, idx) =>
+                                page === "..." ? (
+                                    <span key={`dots-${idx}`} className="px-1.5 text-xs text-[#8C7A6B]">
+                                        …
+                                    </span>
+                                ) : (
+                                    <button
+                                        key={page}
+                                        type="button"
+                                        onClick={() => goToPage(page)}
+                                        aria-current={page === currentPage ? "page" : undefined}
+                                        className={`min-w-[36px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${page === currentPage
+                                            ? "bg-[#2C2724] text-[#FAF8F5] border-[#2C2724]"
+                                            : "bg-white text-[#2C2724] border-[#E8E1D9] hover:bg-[#F3ECE4]"
+                                            }`}
+                                    >
+                                        {page.toLocaleString("bn-BD")}
+                                    </button>
+                                )
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={() => goToPage(currentPage + 1)}
+                                disabled={currentPage >= totalPages}
+                                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold border border-[#E8E1D9] bg-white text-[#2C2724] hover:bg-[#F3ECE4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <span>পরের</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                        </nav>
                     )}
                 </main>
             </div>
