@@ -75,11 +75,6 @@ export default function ComboDetailPage() {
         return [combo.bannerImage, ...(combo.images || [])].filter(Boolean);
     }, [combo]);
 
-    const discountRate = useMemo(() => {
-        if (!combo || !combo.originalPrice || combo.originalPrice <= combo.comboPrice) return 0;
-        return Math.round(((combo.originalPrice - combo.comboPrice) / combo.originalPrice) * 100);
-    }, [combo]);
-
     const unitSavings = useMemo(() => {
         if (!combo || !combo.originalPrice || combo.originalPrice <= combo.comboPrice) return 0;
         return combo.originalPrice - combo.comboPrice;
@@ -191,9 +186,9 @@ export default function ComboDetailPage() {
                                     className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-115"
                                 />
 
-                                {discountRate > 0 && (
+                                {unitSavings > 0 && (
                                     <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase bg-[#2C2724] text-[#E0C9A6] shadow-sm">
-                                        {discountRate}% ছাড়
+                                        ৳{unitSavings.toLocaleString("bn-BD")} ছাড়
                                     </span>
                                 )}
                             </div>
@@ -262,9 +257,9 @@ export default function ComboDetailPage() {
                                             ৳{combo.originalPrice?.toLocaleString("bn-BD")}
                                         </span>
                                     )}
-                                    {discountRate > 0 && (
+                                    {unitSavings > 0 && (
                                         <span className="text-xs font-bold text-[#9E7B66] bg-[#FFFFFF] border border-[#E8E1D9] px-2 py-0.5 rounded">
-                                            {discountRate}% ছাড়
+                                            ৳{unitSavings.toLocaleString("bn-BD")} ছাড়
                                         </span>
                                     )}
                                 </div>

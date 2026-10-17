@@ -73,10 +73,12 @@ export default function CombosPage() {
                         </div>
                     </div>
                 ) : (
-                    /* কম্বো প্যাকেজ গ্রিড */
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 pt-4">
+                    /* কম্বো প্যাকেজ: কার্ড কম হলে মাঝখানে থাকে, বাড়লে দুই পাশে সমানভাবে ছড়ায় */
+                    <div className="flex flex-wrap justify-center gap-8 pt-4">
                         {combos.map((combo) => (
-                            <ComboCard key={combo._id} combo={combo} />
+                            <div key={combo._id} className="grid w-full md:w-[calc((100%-2rem)/2)] lg:w-[calc((100%-4rem)/3)]">
+                                <ComboCard combo={combo} />
+                            </div>
                         ))}
                     </div>
                 )}

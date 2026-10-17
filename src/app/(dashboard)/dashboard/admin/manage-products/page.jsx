@@ -18,11 +18,12 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { fetchAllProducts, deleteProduct } from "@/lib/action/products";
+import { getUnitPricing } from "@/lib/pricing";
+import { categoryConfig, getCategoryLabel, getSubCategoryLabel } from "@/lib/categories";
 
 const categoryList = [
     { label: "সব ক্যাটাগরি", value: "ALL" },
-    { label: "পোশাক (Clothing)", value: "Clothing" },
-    { label: "সুগন্ধি (Fragrance)", value: "Fragrance" },
+    ...categoryConfig.map((cat) => ({ label: `${cat.labelBn} (${cat.labelEn})`, value: cat.value })),
 ];
 
 export default function ManageProductsPage() {
@@ -246,10 +247,7 @@ export default function ManageProductsPage() {
                                 </tr>
                             ) : (
                                 products.map((item) => {
-                                    const finalPrice =
-                                        item.discountRate > 0
-                                            ? Math.round(item.price - (item.price * item.discountRate) / 100)
-                                            : item.price;
+                                    const { finalPrice, hasDiscount } = getUnitPricing(item);
 
                                     return (
                                         <tr
@@ -290,11 +288,11 @@ export default function ManageProductsPage() {
                                             {/* ক্যাটাগরি */}
                                             <td className="py-4 px-4">
                                                 <span className="inline-block px-2.5 py-1 bg-[#F4ECE4] text-[#2C2724] rounded-md text-xs font-medium">
-                                                    {item.category}
+                                                    {getCategoryLabel(item.category)}
                                                 </span>
                                                 {item.subCategory && (
                                                     <p className="text-[11px] text-[#8C7A6B] mt-0.5">
-                                                        {item.subCategory}
+                                                        {getSubCategoryLabel(item.subCategory)}
                                                     </p>
                                                 )}
                                             </td>
@@ -304,13 +302,10 @@ export default function ManageProductsPage() {
                                                 <div className="font-semibold text-xs sm:text-sm text-[#2C2724]">
                                                     ৳{finalPrice}
                                                 </div>
-                                                {item.discountRate > 0 && (
+                                                {hasDiscount && (
                                                     <div className="flex items-center gap-1 text-[11px]">
                                                         <span className="line-through text-[#8C7A6B]">
                                                             ৳{item.price}
-                                                        </span>
-                                                        <span className="text-[#A8483B] font-medium">
-                                                            (-{item.discountRate}%)
                                                         </span>
                                                     </div>
                                                 )}
@@ -452,13 +447,13 @@ export default function ManageProductsPage() {
                                 <div>
                                     <span className="text-[#70645C] block">ক্যাটাগরি / সাব-ক্যাটাগরি:</span>
                                     <span className="font-semibold text-[#2C2724]">
-                                        {selectedProduct.category} {selectedProduct.subCategory && `> ${selectedProduct.subCategory}`}
+                                        {getCategoryLabel(selectedProduct.category)} {selectedProduct.subCategory && `> ${getSubCategoryLabel(selectedProduct.subCategory)}`}
                                     </span>
                                 </div>
                                 <div>
                                     <span className="text-[#70645C] block">মূল্য ও ছাড়:</span>
                                     <span className="font-semibold text-[#2C2724]">
-                                        ৳{selectedProduct.price} (ছাড়: {selectedProduct.discountRate}%)
+                                        ৳{selectedProduct.price} (ছাড়: {selectedProduct.discountPrice > 0 ? `৳${selectedProduct.discountPrice}` : "নেই"})
                                     </span>
                                 </div>
                                 <div>

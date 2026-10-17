@@ -12,11 +12,6 @@ import {
 } from "lucide-react";
 
 export default function ComboCard({ combo }) {
-    const discountRate =
-        combo.originalPrice > combo.comboPrice
-            ? Math.round(((combo.originalPrice - combo.comboPrice) / combo.originalPrice) * 100)
-            : 0;
-
     const savedAmount = Math.max(0, combo.originalPrice - combo.comboPrice);
 
     return (
@@ -33,9 +28,9 @@ export default function ComboCard({ combo }) {
 
                 {/* ব্যাজসমূহ */}
                 <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 items-start">
-                    {discountRate > 0 && (
+                    {savedAmount > 0 && (
                         <span className="px-3 py-1 rounded-md text-xs font-bold tracking-wider uppercase bg-[#2C2724] text-[#E0C9A6] shadow-sm">
-                            {discountRate}% ছাড়
+                            ৳{savedAmount.toLocaleString("bn-BD")} ছাড়
                         </span>
                     )}
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#FAF8F5]/90 backdrop-blur-xs text-[#5C534D] border border-[#E8E1D9]">

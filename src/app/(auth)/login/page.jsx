@@ -19,7 +19,15 @@ function LoginContent() {
 
     const getRedirectUrl = () => {
         const redirect = searchParams.get("redirect") || searchParams.get("callbackUrl");
-        return redirect || "/";
+
+        // শুধু সাইটের নিজস্ব পাথ গ্রহণযোগ্য (যেমন /dashboard/admin) — বাইরের লিংকে রিডাইরেক্ট বন্ধ
+        const isSafeInternalPath =
+            typeof redirect === "string" &&
+            redirect.startsWith("/") &&
+            !redirect.startsWith("//") &&
+            !redirect.startsWith("/\\");
+
+        return isSafeInternalPath ? redirect : "/";
     };
 
     const onLoginSubmit = async (userData) => {

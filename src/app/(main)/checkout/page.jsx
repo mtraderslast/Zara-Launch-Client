@@ -11,6 +11,7 @@ import {
 import Swal from "sweetalert2";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { fetchProductDetails } from "@/lib/action/products";
+import { getUnitPricing, findMatchingVariant } from "@/lib/pricing";
 import { createOrder } from "@/lib/action/order";
 
 export default function CheckoutPage() {
@@ -80,27 +81,13 @@ export default function CheckoutPage() {
     }, [items, productCatalog]);
 
     // নির্দিষ্ট আইটেমের ফাইনাল ভ্যারিয়েন্ট বের করা
-    const getMatchedVariant = (cartItem, product) => {
-        if (!product?.hasVariants || !product?.variants?.length) return null;
-        return product.variants.find((v) =>
-            Object.entries(cartItem.selectedAttributes || {}).every(
-                ([key, val]) => v.attributes?.[key] === val
-            )
-        ) || product.variants[0];
-    };
+    const getMatchedVariant = (cartItem, product) =>
+        findMatchingVariant(product, cartItem.selectedAttributes);
 
     // নির্দিষ্ট আইটেমের ফাইনাল প্রাইস বের করার ফাংশন
     const getItemFinalPrice = (cartItem, product) => {
         if (!product) return 0;
-        let itemPrice = product.price || 0;
-
-        const matchedVariant = getMatchedVariant(cartItem, product);
-        if (matchedVariant?.price && matchedVariant.price > 0) {
-            itemPrice = matchedVariant.price;
-        }
-
-        const discountRate = product.discountRate || 0;
-        return Math.round(itemPrice - (itemPrice * discountRate) / 100);
+        return getUnitPricing(product, getMatchedVariant(cartItem, product)).finalPrice;
     };
 
     // সাবটোটাল হিসাব করা
@@ -155,6 +142,7 @@ export default function CheckoutPage() {
                     slug: item.slug,
                     quantity: item.quantity,
                     variantSku: item.variantSku || matchedVariant?.sku || null,
+                    attributes: item.selectedAttributes || {},
                 };
             });
 

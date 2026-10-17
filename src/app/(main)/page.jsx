@@ -9,6 +9,7 @@ function Home() {
     return (
         <>
             <HeroBanner />
+            <CategorySection />
             <FeaturedProducts />
             <HomeComboSection />
             <CustomerReviews />

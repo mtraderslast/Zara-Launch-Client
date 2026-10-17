@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { fetchProductDetails } from "@/lib/action/products";
+import { getUnitPricing, findMatchingVariant } from "@/lib/pricing";
 
 export default function CartDrawer() {
     const [mounted, setMounted] = useState(false);
@@ -68,24 +69,8 @@ export default function CartDrawer() {
     const getItemFinalPrice = (cartItem, product) => {
         if (!product) return 0;
 
-        let itemPrice = product.price || 0;
-
-        if (product.hasVariants && product.variants?.length > 0) {
-            const matchedVariant = product.variants.find((v) =>
-                Object.entries(cartItem.selectedAttributes || {}).every(
-                    ([key, val]) => v.attributes?.[key] === val
-                )
-            );
-
-            if (matchedVariant && matchedVariant.price !== undefined) {
-                itemPrice = matchedVariant.price;
-            } else if (product.variants[0]?.price !== undefined) {
-                itemPrice = product.variants[0].price;
-            }
-        }
-
-        const discountRate = product.discountRate || 0;
-        return Math.round(itemPrice - (itemPrice * discountRate) / 100);
+        const matchedVariant = findMatchingVariant(product, cartItem.selectedAttributes);
+        return getUnitPricing(product, matchedVariant).finalPrice;
     };
 
     const subtotal = useMemo(() => {

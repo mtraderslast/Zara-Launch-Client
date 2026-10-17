@@ -13,13 +13,17 @@ export const fetchAllProducts = (params = {}) => {
     return apiHandler(() => axios.get(API_URL, { params }));
 };
 
+export const fetchCategorySummary = () => {
+    return apiHandler(() => axios.get(`${API_URL}/category-summary`));
+};
+
 export const fetchProductDetails = (slug) => {
     return apiHandler(() => axios.get(`${API_URL}/${slug}`));
 };
 
 export const fetchProductById = (id) => {
     return apiHandler(() =>
-        axios.get(`${API_URL}/${id}`, { withCredentials: true })
+        axios.get(`${API_URL}/admin/${id}`, { withCredentials: true })
     );
 };
 
