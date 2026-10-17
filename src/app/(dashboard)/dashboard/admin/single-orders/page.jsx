@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { fetchAllOrders, updateOrderStatus, deleteOrder } from "@/lib/action/order";
+import { getVariantEntries, getVariantLabel } from "@/lib/orderVariant";
 
 const STATUS_BADGES = {
     Pending: { label: "পেন্ডিং", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: Clock },
@@ -291,6 +292,14 @@ export default function SingleOrdersPage() {
                                                     <span className="font-semibold text-[#2C2724]">
                                                         {order.items?.length || 0} টি
                                                     </span>
+                                                    {order.items?.map((item, idx) => {
+                                                        const label = getVariantLabel(item);
+                                                        return label ? (
+                                                            <span key={idx} className="block text-[11px] text-[#7C6E65] mt-0.5 max-w-[220px]">
+                                                                {label} × {item.quantity}
+                                                            </span>
+                                                        ) : null;
+                                                    })}
                                                 </td>
 
                                                 <td className="py-3.5 px-4 font-bold text-[#2C2724]">
@@ -478,8 +487,24 @@ export default function SingleOrdersPage() {
                                                 <p className="font-semibold text-xs text-[#2C2724] truncate">
                                                     {item.title}
                                                 </p>
+                                                {getVariantEntries(item).length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {getVariantEntries(item).map(([key, value]) => (
+                                                            <span
+                                                                key={key}
+                                                                className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F4ECE4] border border-[#E3D7CC] text-[#2C2724]"
+                                                            >
+                                                                {key}: <strong>{value}</strong>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : item.variantLabel ? (
+                                                    <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F4ECE4] border border-[#E3D7CC] text-[#2C2724]">
+                                                        {item.variantLabel}
+                                                    </span>
+                                                ) : null}
                                                 {item.variantSku && (
-                                                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#E8E1D9] text-[#7C6E65]">
+                                                    <span className="ml-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#E8E1D9] text-[#7C6E65]">
                                                         SKU: {item.variantSku}
                                                     </span>
                                                 )}
