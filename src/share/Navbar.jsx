@@ -54,6 +54,7 @@ export default function Navbar() {
                                 <span className="font-serif text-xl sm:text-2xl font-bold tracking-[0.2em] text-[#2C2724] uppercase leading-none transition-colors duration-300 group-hover:text-[#9E7B66]">
                                     Zara Launch
                                 </span>
+                                <span className="w-full border-b border-gray-300 my-1"></span>
                                 <span className="text-[9px] tracking-[0.35em] text-[#8C7A6B] uppercase mt-1">
                                     Modern Fashion & Beauty
                                 </span>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
     SlidersHorizontal,
     ChevronDown,
@@ -22,38 +22,32 @@ const MAX_PRICE_LIMIT = 50000;
 
 function ShopContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
 
-    const [products, setProducts] = useState([]);
-    const [totalProducts, setTotalProducts] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-    const [loading, setLoading] = useState(true);
+    // ক্যাটাগরি/সাব-ক্যাটাগরির একমাত্র সোর্স হলো URL (?category=...&subCategory=...)।
+    // নেভবার ও হোম পেজের ক্যাটাগরি কার্ড থেকে আসা লিংক সরাসরি এখান থেকেই পড়া হয়, তাই
+    // প্রথম রেন্ডারেই সঠিক ফিল্টার দিয়ে ডাটাবেজে কল যায় (আগে প্রথমে "ALL" দিয়ে কল যেত)।
+    const rawCategory = searchParams.get("category");
+    const selectedCategory = categoryConfig.some((c) => c.value === rawCategory) ? rawCategory : "ALL";
+    const activeCat = categoryConfig.find((c) => c.value === selectedCategory);
+    const rawSubCategory = searchParams.get("subCategory");
+    const selectedSubCategory =
+        activeCat && activeCat.subCategories.some((s) => s.value === rawSubCategory) ? rawSubCategory : "ALL";
 
     const [searchInput, setSearchInput] = useState("");
     const [activeSearch, setActiveSearch] = useState("");
 
-    const [selectedCategory, setSelectedCategory] = useState("ALL");
-    const [selectedSubCategory, setSelectedSubCategory] = useState("ALL");
-    const [maxPrice, setMaxPrice] = useState(50000);
-    const [appliedMaxPrice, setAppliedMaxPrice] = useState(50000);
+    const [maxPrice, setMaxPrice] = useState(MAX_PRICE_LIMIT);
+    const [appliedMaxPrice, setAppliedMaxPrice] = useState(MAX_PRICE_LIMIT);
     const [sortBy, setSortBy] = useState("newest");
 
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     const [wishlist, setWishlist] = useState([]);
 
-    useEffect(() => {
-        const queryCategory = searchParams.get("category");
-        const querySubCategory = searchParams.get("subCategory");
+    const availableSubCategories = activeCat ? activeCat.subCategories : [];
 
-        setSelectedCategory(queryCategory || "ALL");
-        setSelectedSubCategory(querySubCategory || "ALL");
-    }, [searchParams]);
-
-    const availableSubCategories = useMemo(() => {
-        const activeCat = categoryConfig.find((cat) => cat.value === selectedCategory);
-        return activeCat ? activeCat.subCategories : [];
-    }, [selectedCategory]);
-
-    // ফিল্টার/সার্চ/সর্ট বদলালে পেজ নিজে থেকেই ১ এ ফিরে যায় (আলাদা effect বা ডাবল ফেচ ছাড়াই)
+    // ফিল্টার/সার্চ/সর্ট বদলালে পেজ নিজে থেকেই ১ এ ফিরে যায়
     const filtersKey = [selectedCategory, selectedSubCategory, appliedMaxPrice, sortBy, activeSearch].join("|");
     const [pageState, setPageState] = useState({ key: "", page: 1 });
     const currentPage = pageState.key === filtersKey ? pageState.page : 1;
@@ -65,35 +59,44 @@ function ShopContent() {
         }
     };
 
-    const loadProducts = useCallback(async () => {
-        try {
-            setLoading(true);
-            const params = {
-                page: currentPage,
-                limit: PRODUCTS_PER_PAGE,
-                sortBy,
-            };
+    // কোন প্যারামিটার দিয়ে কল গেছে তার "চাবি"। রেসপন্স এলে চাবি মিলিয়ে দেখা হয়, ফলে
+    // দেরিতে আসা পুরোনো রেসপন্স নতুন ফিল্টারের ফলাফল ওভাররাইট করতে পারে না।
+    const requestKey = [currentPage, filtersKey].join("#");
+    const [result, setResult] = useState({ key: null, products: [], total: 0, totalPages: 1 });
+    const loading = result.key !== requestKey;
+    const { products, total: totalProducts, totalPages } = result;
 
-            // স্লাইডার সর্বোচ্চে থাকলে কোনো দামের সীমা নেই (নইলে ৫০,০০০ টাকার বেশি দামের পণ্য লুকিয়ে যেত)
-            if (appliedMaxPrice < MAX_PRICE_LIMIT) params.maxPrice = appliedMaxPrice;
-            if (selectedCategory !== "ALL") params.category = selectedCategory;
-            if (selectedSubCategory !== "ALL") params.subCategory = selectedSubCategory;
-            if (activeSearch.trim()) params.search = activeSearch.trim();
+    useEffect(() => {
+        let cancelled = false;
 
-            const response = await fetchAllProducts(params);
+        const params = { page: currentPage, limit: PRODUCTS_PER_PAGE, sortBy };
+        // স্লাইডার সর্বোচ্চে থাকলে কোনো দামের সীমা নেই (নইলে ৫০,০০০ টাকার বেশি দামের পণ্য লুকিয়ে যেত)
+        if (appliedMaxPrice < MAX_PRICE_LIMIT) params.maxPrice = appliedMaxPrice;
+        if (selectedCategory !== "ALL") params.category = selectedCategory;
+        if (selectedSubCategory !== "ALL") params.subCategory = selectedSubCategory;
+        if (activeSearch.trim()) params.search = activeSearch.trim();
 
-            setProducts(response?.data || []);
-            setTotalProducts(response?.meta?.total || 0);
-            setTotalPages(response?.meta?.totalPages || 1);
-        } catch (error) {
-            console.error("Failed to fetch products:", error);
-            setProducts([]);
-            setTotalProducts(0);
-            setTotalPages(1);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentPage, selectedCategory, selectedSubCategory, appliedMaxPrice, sortBy, activeSearch]);
+        fetchAllProducts(params)
+            .then((response) => {
+                if (cancelled) return;
+                setResult({
+                    key: requestKey,
+                    products: response?.data || [],
+                    total: response?.meta?.total || 0,
+                    totalPages: response?.meta?.totalPages || 1,
+                });
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                console.error("Failed to fetch products:", error);
+                setResult({ key: requestKey, products: [], total: 0, totalPages: 1 });
+            });
+
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [requestKey]);
 
     // পেজিনেশন বাটনে দেখানোর পেজ নম্বর (বর্তমান পেজের আশপাশে, বাকিগুলো "…")
     const pageNumbers = useMemo(() => {
@@ -108,9 +111,14 @@ function ShopContent() {
         return pages;
     }, [totalPages, currentPage]);
 
-    useEffect(() => {
-        loadProducts();
-    }, [loadProducts]);
+    // ক্যাটাগরি বদলালে URL বদলানো হয় (ব্যাক বাটন ও লিংক শেয়ারও কাজ করে)
+    const updateCategoryQuery = (category, subCategory = "ALL") => {
+        const query = new URLSearchParams();
+        if (category && category !== "ALL") query.set("category", category);
+        if (subCategory && subCategory !== "ALL") query.set("subCategory", subCategory);
+        const qs = query.toString();
+        router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    };
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -123,8 +131,11 @@ function ShopContent() {
     };
 
     const handleCategoryChange = (val) => {
-        setSelectedCategory(val);
-        setSelectedSubCategory("ALL");
+        updateCategoryQuery(val, "ALL");
+    };
+
+    const handleSubCategoryChange = (val) => {
+        updateCategoryQuery(selectedCategory, val);
     };
 
     const toggleWishlist = (id) => {
@@ -134,16 +145,16 @@ function ShopContent() {
     };
 
     const handleResetFilters = () => {
-        setSelectedCategory("ALL");
-        setSelectedSubCategory("ALL");
-        setMaxPrice(50000);
-        setAppliedMaxPrice(50000);
+        updateCategoryQuery("ALL", "ALL");
+        setMaxPrice(MAX_PRICE_LIMIT);
+        setAppliedMaxPrice(MAX_PRICE_LIMIT);
         setSortBy("newest");
         setSearchInput("");
         setActiveSearch("");
     };
 
-    const FilterContent = () => (
+    // কম্পোনেন্ট নয়, সাধারণ JSX ভ্যালু: রেন্ডারের ভেতরে কম্পোনেন্ট বানালে প্রতিবার রি-মাউন্ট হয় (স্লাইডার টানার সময় আটকে যেত)
+    const filterContent = (
         <div className="w-full space-y-5 text-[#2C2724]">
             <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2724]">
@@ -189,7 +200,7 @@ function ShopContent() {
                 <div className="space-y-1">
                     <button
                         type="button"
-                        onClick={() => setSelectedSubCategory("ALL")}
+                        onClick={() => handleSubCategoryChange("ALL")}
                         className={`w-full flex items-center justify-between text-left text-xs sm:text-sm px-3 py-2 rounded-lg transition-all ${selectedSubCategory === "ALL"
                                 ? "bg-[#FAF8F5] text-[#2C2724] font-bold border border-[#E8E1D9]"
                                 : "text-[#5C534D] hover:bg-[#FAF8F5] hover:text-[#2C2724]"
@@ -204,7 +215,7 @@ function ShopContent() {
                             <button
                                 key={sub.value}
                                 type="button"
-                                onClick={() => setSelectedSubCategory(sub.value)}
+                                onClick={() => handleSubCategoryChange(sub.value)}
                                 className={`w-full flex items-center justify-between text-left text-xs sm:text-sm px-3 py-2 rounded-lg transition-all ${isSelected
                                         ? "bg-[#FAF8F5] text-[#2C2724] font-bold border border-[#E8E1D9]"
                                         : "text-[#5C534D] hover:bg-[#FAF8F5] hover:text-[#2C2724]"
@@ -343,7 +354,7 @@ function ShopContent() {
                         <span className="font-serif text-sm font-bold text-[#2C2724]">ফিল্টার অপশন</span>
                         <SlidersHorizontal className="w-4 h-4 text-[#9E7B66]" />
                     </div>
-                    <FilterContent />
+                    {filterContent}
                 </aside>
 
                 <main className="flex-1 w-full">
@@ -447,7 +458,7 @@ function ShopContent() {
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
-                            <FilterContent />
+                            {filterContent}
                         </div>
 
                         <button

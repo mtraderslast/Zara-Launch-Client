@@ -18,6 +18,7 @@ import {
     Loader2,
 } from "lucide-react";
 import { trackGuestOrder } from "@/lib/action/order";
+import { getVariantLabel } from "@/lib/orderVariant";
 
 function TrackOrderContent() {
     const searchParams = useSearchParams();
@@ -226,6 +227,11 @@ function TrackOrderContent() {
                                         <h4 className="text-xs sm:text-sm font-semibold text-[#2C2724] truncate">
                                             {item.title}
                                         </h4>
+                                        {getVariantLabel(item) && (
+                                            <p className="text-[11px] font-medium text-[#9E7B66] mt-0.5">
+                                                {getVariantLabel(item)}
+                                            </p>
+                                        )}
                                         <p className="text-[11px] text-[#70645C] mt-0.5">
                                             পরিমাণ: {item.quantity} টি | দাম: ৳{item.price?.toLocaleString("bn-BD")}
                                         </p>
