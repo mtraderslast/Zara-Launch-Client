@@ -48,7 +48,7 @@ export default function CategorySection() {
     if (!loading && categories.length === 0) return null;
 
     return (
-        <section className="w-full px-2 sm:px-3 md:px-4 py-12 lg:py-16 bg-[#FAF8F5]">
+        <section className="w-full px-2 sm:px-3 md:px-4 py-8 bg-[#FAF8F5]">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10 pb-4 border-b border-[#E8E1D9]">
                 <div>
                     <div className="flex items-center gap-2 mb-1.5">
