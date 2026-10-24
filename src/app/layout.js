@@ -1,5 +1,6 @@
 import { Hind_Siliguri, Inter } from "next/font/google";
 import localFont from "next/font/local";
+import MetaPixel from "@/components/MetaPixel";
 import "./globals.css";
 
 // Hind Siliguri-র রেগুলার ওয়েটে "১" দেখতে প্রায় "৯" এর মতো লাগে, তাই শুধু বাংলা অঙ্কগুলো (০-৯) এই ফন্টে দেখানো হয়
@@ -40,6 +41,7 @@ export default function RootLayout({ children }) {
             className={`${bnDigits.variable} ${hindSiliguri.variable} ${inter.variable} h-full antialiased`}
         >
             <body className="min-h-full dark:bg-black font-sans">
+                <MetaPixel />
                 {children}
             </body>
         </html>
